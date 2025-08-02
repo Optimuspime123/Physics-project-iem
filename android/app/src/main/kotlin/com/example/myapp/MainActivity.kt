@@ -1,4 +1,4 @@
-package com.example.myapp
+package dev.saswatayu.iemphysics
 
 import io.flutter.embedding.android.FlutterActivity
 
