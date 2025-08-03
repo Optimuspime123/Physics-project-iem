@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '/placeholder_page.dart'; 
+import 'package:provider/provider.dart';
+import '/team_page.dart';
+import 'theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -58,6 +60,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -80,6 +84,19 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.wb_sunny_outlined
+                  : Icons.nightlight_round,
+            ),
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -90,14 +107,24 @@ class _HomePageState extends State<HomePage> {
             _buildSection(context, 'Theory', Icons.book, const TheoryPage()),
             const SizedBox(height: 16.0),
             _buildSection(context, 'Lab', Icons.science, const LabPage()),
-            const Spacer(),
+            Expanded(
+              child: Center(
+                child: Image.asset(
+                  'lib/assets/physics.png',
+                  height: 120,
+                  color: Theme.of(context).colorScheme.primary,
+                  colorBlendMode: BlendMode.srcIn,
+                ),
+              ),
+            ),
             SizedBox(
               height: 150,
               child: PageView.builder(
                 itemCount: HomePage.quotes.length,
                 controller: _pageController,
                 itemBuilder: (context, index) {
-                  return _buildQuoteCard(HomePage.quotes[index], HomePage.authors[index]);
+                  return _buildQuoteCard(
+                      HomePage.quotes[index], HomePage.authors[index]);
                 },
               ),
             ),
@@ -110,7 +137,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSection(BuildContext context, String title, IconData icon, Widget page) {
+  Widget _buildSection(
+      BuildContext context, String title, IconData icon, Widget page) {
     return FilledButton.tonal(
       onPressed: () {
         Navigator.push(
@@ -181,7 +209,7 @@ class _HomePageState extends State<HomePage> {
     return Column(
       children: [
         Text(
-          'Made with ❤️ by section A8',
+          'Made with ❤️ by students section A8,',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -191,10 +219,10 @@ class _HomePageState extends State<HomePage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const TeamPlaceholderPage()),
+              MaterialPageRoute(builder: (context) => const TeamPage()),
             );
           },
-          child: const Text('view the team!'),
+          child: const Text('see who helped!'),
         ),
       ],
     );

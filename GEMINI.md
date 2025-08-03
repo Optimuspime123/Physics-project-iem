@@ -164,7 +164,7 @@ class MyApp extends StatelessWidget {
       ),
       textTheme: appTextTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: primarySeedColor,
+ backgroundColor: primarySeedColor.shade100,
         foregroundColor: Colors.white,
         titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
       ),
