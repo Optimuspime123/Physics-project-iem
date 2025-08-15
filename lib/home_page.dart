@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/team_page.dart';
+import 'lab_page.dart';
+import 'theory_page.dart';
 import 'theme_provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -102,7 +104,7 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
+          children: [
             const SizedBox(height: 24.0),
             _buildSection(context, 'Theory', Icons.book, const TheoryPage()),
             const SizedBox(height: 16.0),
@@ -209,7 +211,7 @@ class _HomePageState extends State<HomePage> {
     return Column(
       children: [
         Text(
-          'Made with ❤️ by students section A8,',
+          'Made with ❤️ by students of section A8,',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -225,38 +227,6 @@ class _HomePageState extends State<HomePage> {
           child: const Text('see who helped!'),
         ),
       ],
-    );
-  }
-}
-
-class TheoryPage extends StatelessWidget {
-  const TheoryPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Theory Section'),
-      ),
-      body: const Center(
-        child: Text('This is the Theory section page.'),
-      ),
-    );
-  }
-}
-
-class LabPage extends StatelessWidget {
-  const LabPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lab Section'),
-      ),
-      body: const Center(
-        child: Text('This is the Lab section page.'),
-      ),
     );
   }
 }
