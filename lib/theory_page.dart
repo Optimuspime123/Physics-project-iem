@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TheoryPage extends StatefulWidget {
@@ -14,7 +18,7 @@ class _TheoryPageState extends State<TheoryPage> {
   String _query = '';
 
   // ----------------------- MODULE DATA -----------------------
-  // Each module will later get PDF study material- Keeping out for now.
+  // study material added hhehehehe
   static final List<ModuleItem> _modules = [
     ModuleItem(
       number: 1,
@@ -171,7 +175,7 @@ class _TheoryPageState extends State<TheoryPage> {
       textbooks: const [
         BookItem(
           title: 'Physics — B. K. Pandey, Manoj K. Harbola et al. (Cengage), Chapter 2',
-          storeUrl: 'https://www.amazon.in/Physics-B-K-Pandey/dp/8131508020', // example listing
+          storeUrl: 'https://www.amazon.in/Physics-B-K-Pandey/dp/8131508020',
         ),
         BookItem(
           title: 'Engineering Physics — Sujay Kumar Bhattacharya (McGraw Hill), Chapter 3',
@@ -332,8 +336,7 @@ class _TheoryPageState extends State<TheoryPage> {
       kind: LinkKind.course,
     ),
     LinkItem(
-      label:
-          'Mechanics: Motion, Forces, Energy and Gravity, from Particles to Planets',
+      label: 'Mechanics: Motion, Forces, Energy and Gravity, from Particles to Planets',
       url: 'https://www.coursera.org/learn/mechanics-particles-planets',
       kind: LinkKind.course,
     ),
@@ -427,7 +430,7 @@ class _TheoryPageState extends State<TheoryPage> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Search bar (Material 3 look)
+          // Search bar
           Card(
             elevation: 0,
             color: cs.surfaceContainerHighest,
@@ -472,12 +475,13 @@ class _TheoryPageState extends State<TheoryPage> {
           const SizedBox(height: 8),
 
           if (_filteredModules.isEmpty)
-            _EmptyCard(text: 'No modules match your search.')
+            const _EmptyCard(text: 'No modules match your search.')
           else
             ..._filteredModules.map((m) => _ModuleCard(
                   module: m,
                   onOpenLink: _openUrl,
                   onCopyLink: _copyLink,
+                  onOpenModulePdf: _openModulePdf, // NEW
                 )),
 
           const SizedBox(height: 20),
@@ -522,7 +526,7 @@ class _TheoryPageState extends State<TheoryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Subheading(text: 'Books'),
+                const _Subheading(text: 'Books'),
                 const SizedBox(height: 6),
                 ..._extraBooks.map(
                   (b) => _LinkTile(
@@ -562,7 +566,51 @@ class _TheoryPageState extends State<TheoryPage> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  /// Opens the module's PDF from bundled assets using the platform's default PDF app.
+  /// Expects assets at: lib/assets/pdfs/Module{N}.pdf  (declared in pubspec.yaml)
+  Future<void> _openModulePdf(int moduleNumber) async {
+  if (kIsWeb) {
+    // For assets declared as `lib/assets/pdfs/` in pubspec.yaml
+    final url = 'assets/lib/assets/pdfs/Module$moduleNumber.pdf';
+    final ok = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.platformDefault, // opens a new tab with the browser PDF viewer
+    );
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open PDF in browser')),
+      );
     }
+    return;
+  }
+
+  // Mobile/desktop path used by rootBundle:
+  const base = 'lib/assets/pdfs';
+  final assetPath = '$base/Module$moduleNumber.pdf';
+  try {
+    final data = await rootBundle.load(assetPath);
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/Module$moduleNumber.pdf');
+    await file.writeAsBytes(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      flush: true,
+    );
+    final result = await OpenFilex.open(file.path);
+    if (result.type != ResultType.done && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open PDF (${result.message}).')),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening PDF: $e')),
+      );
+    }
+  }
+}
 }
 
 // ======================= MODELS =======================
@@ -616,11 +664,13 @@ class _ModuleCard extends StatelessWidget {
   final ModuleItem module;
   final Future<void> Function(String url) onOpenLink;
   final Future<void> Function(String url) onCopyLink;
+  final Future<void> Function(int moduleNumber) onOpenModulePdf; // NEW
 
   const _ModuleCard({
     required this.module,
     required this.onOpenLink,
     required this.onCopyLink,
+    required this.onOpenModulePdf, // NEW
   });
 
   @override
@@ -662,15 +712,28 @@ class _ModuleCard extends StatelessWidget {
           children: [
             // Sub-topics
             if (module.sections.isNotEmpty) ...[
-              _Subheading(text: 'Sub-topics'),
+              const _Subheading(text: 'Sub-topics'),
               const SizedBox(height: 8),
               ...module.sections.map((s) => _BulletBlock(heading: s.heading, bullets: s.bullets)),
               const SizedBox(height: 12),
             ],
 
+            const _Subheading(text: 'Study Material'),
+            const SizedBox(height: 6),
+            _LinkTile(
+    leadingIcon: Icons.picture_as_pdf_outlined,
+    title: 'Module ${module.number} Study Material (PDF)',
+    url: 'lib/assets/pdfs/Module${module.number}.pdf', 
+    onOpen: () => onOpenModulePdf(module.number),
+    onCopy: () => Clipboard.setData(
+      ClipboardData(text: 'lib/assets/pdfs/Module${module.number}.pdf'),
+  ),
+),
+            const SizedBox(height: 12),
+
             // Academia & Industry mapping (links)
             if (module.academiaLinks.isNotEmpty || module.industryLinks.isNotEmpty) ...[
-              _Subheading(text: 'Mapping with Industry & International Academia'),
+              const _Subheading(text: 'Mapping with Industry & International Academia'),
               const SizedBox(height: 6),
               ...module.academiaLinks.map(
                 (l) => _LinkTile(
@@ -695,7 +758,7 @@ class _ModuleCard extends StatelessWidget {
 
             // Textbook mapping
             if (module.textbooks.isNotEmpty) ...[
-              _Subheading(text: 'Text Book Mapping'),
+              const _Subheading(text: 'Text Book Mapping'),
               const SizedBox(height: 6),
               ...module.textbooks.map(
                 (b) => _LinkTile(
@@ -711,7 +774,7 @@ class _ModuleCard extends StatelessWidget {
 
             // Lab assignments
             if (module.labAssignments.isNotEmpty) ...[
-              _Subheading(text: 'Corresponding Lab Assignment'),
+              const _Subheading(text: 'Corresponding Lab Assignment'),
               const SizedBox(height: 6),
               _BulletedList(items: module.labAssignments),
               const SizedBox(height: 6),
@@ -751,12 +814,12 @@ class _LinkTile extends StatelessWidget {
         spacing: 6,
         children: [
           IconButton(
-            tooltip: 'Open link',
+            tooltip: 'Open',
             icon: const Icon(Icons.open_in_new),
             onPressed: onOpen,
           ),
           IconButton(
-            tooltip: 'Copy link',
+            tooltip: 'Copy',
             icon: const Icon(Icons.copy),
             onPressed: onCopy,
           ),
@@ -880,9 +943,9 @@ class _EmptyCard extends StatelessWidget {
       elevation: 0,
       color: cs.surfaceContainerLowest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(text),
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('No modules match your search.'),
       ),
     );
   }
