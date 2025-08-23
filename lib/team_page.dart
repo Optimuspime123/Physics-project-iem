@@ -27,7 +27,7 @@ class TeamPage extends StatelessWidget {
             imageUrl: 'https://files.catbox.moe/lc4nun.JPG',
           ),
 
-          // Others use default Adobe Stock image automatically
+          // Others use default Adobe Stock image 
           const PersonTile(name: 'Developer 2', role: 'WIP'),
           const PersonTile(name: 'Developer 3', role: 'WIP'),
 
@@ -35,7 +35,7 @@ class TeamPage extends StatelessWidget {
           _buildSectionTitle('Physics Faculty'),
           const SizedBox(height: 10),
           const PersonTile(name: 'Faculty 1', role: 'Professor'),
-          const PersonTile(name: 'Faculty 2', role: 'Professor Assistant'),
+          const PersonTile(name: 'Faculty 2', role: 'Professor'),
           const PersonTile(name: 'Faculty 3', role: 'Lab in-charge'),
 
           const SizedBox(height: 30),

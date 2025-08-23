@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_latex/easy_latex.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LabPage extends StatefulWidget {
   const LabPage({super.key});
-
   @override
   State<LabPage> createState() => _LabPageState();
 }
@@ -15,243 +17,265 @@ class _LabPageState extends State<LabPage> {
   static final List<LabExperiment> _labExperiments = [
     LabExperiment(
       number: 1,
-      title: 'Rigidity Modulus Determination',
-      module: 'Mechanics',
-      pageRange: '1-3',
-      objective: 'Determine the rigidity modulus of the material of a wire using dynamic method',
-      equipment: [
-        'Torsional pendulum apparatus',
-        'Stopwatch',
-        'Meter scale',
-        'Vernier caliper',
-        'Test wire',
-        'Weights'
-      ],
-      procedure: [
-        'Measure the diameter and length of the test wire',
-        'Set up the torsional pendulum with the wire',
-        'Add known weights and measure time period for oscillations',
-        'Calculate rigidity modulus using the formula: η = (π r⁴ P) / (2 l T²)',
-        'Repeat with static method for comparison'
-      ],
-      theory: 'Rigidity modulus measures the resistance of a material to shear deformation. The dynamic method uses torsional oscillations while static method uses direct torque application.',
-      precautions: [
-        'Ensure wire is free from kinks and twists',
-        'Take multiple readings for accuracy',
-        'Maintain constant temperature',
-        'Handle weights carefully to avoid accidents'
-      ],
+      title: 'Carey Foster Bridge Experiment',
+      pageRange: '01-06',
+      objective:
+          'Determine the resistance per unit length of the bridge wire and hence the value of a low unknown resistance.',
+      theory: r'''
+The Carey Foster bridge is a modified Wheatstone bridge for comparing very small resistances.
+At balance:
+$$\frac{R_1}{R_2}=\frac{R_3}{R_4}$$
+Shifting the balance point along the uniform bridge wire relates the difference in resistances to the change in balance length and the wire resistance per unit length.
+''',
     ),
     LabExperiment(
       number: 2,
-      title: 'Acceleration Due to Gravity',
-      module: 'Mechanics',
-      pageRange: '4-6',
-      objective: 'Determine acceleration due to gravity using bar pendulum',
-      equipment: [
-        'Bar pendulum',
-        'Stopwatch',
-        'Meter scale',
-        'Vernier caliper',
-        'Support stand'
-      ],
-      procedure: [
-        'Measure the length of the pendulum from pivot to center of mass',
-        'Displace the pendulum by small angle and release',
-        'Measure time for 20 oscillations',
-        'Calculate g using formula: g = (4π²L) / T²',
-        'Repeat measurements for accuracy'
-      ],
-      theory: 'A simple pendulum follows SHM for small angles. The period depends on length and gravity, allowing g calculation.',
-      precautions: [
-        'Keep amplitude small (<10°)',
-        'Ensure pendulum swings in plane',
-        'Take multiple sets of readings',
-        'Account for air resistance'
-      ],
+      title: 'Newton’s Ring Experiment',
+      pageRange: '07-12',
+      objective:
+          'Study interference in a thin air film and determine the radius of curvature of a plano–convex lens using ring diameters.',
+      theory: r'''
+For reflection at the air–glass interface, the conditions are:
+Bright fringes:
+$$2\mu t=\left(n+\frac{1}{2}\right)\lambda$$
+Dark fringes:
+$$2\mu t=n\lambda$$
+Using ring diameters, the lens radius of curvature is
+$$R=\frac{D_{n+m}^{2}-D_{n}^{2}}{4m\lambda}$$
+''',
     ),
     LabExperiment(
       number: 3,
-      title: 'Young\'s Modulus Determination',
-      module: 'Mechanics',
-      pageRange: '7-9',
-      objective: 'Determine Young\'s modulus of elasticity using Searle\'s apparatus',
-      equipment: [
-        'Searle\'s apparatus',
-        'Vernier caliper',
-        'Screw gauge',
-        'Test wire',
-        'Weights',
-        'Spirit level'
-      ],
-      procedure: [
-        'Measure diameter and length of test wire',
-        'Set up Searle\'s apparatus with wire',
-        'Apply incremental loads and measure extensions',
-        'Plot stress-strain curve',
-        'Calculate Young\'s modulus from slope: Y = (stress) / (strain)'
-      ],
-      theory: 'Young\'s modulus is the ratio of stress to strain within elastic limit. It measures material\'s stiffness.',
-      precautions: [
-        'Ensure wire is straight and uniform',
-        'Apply loads gradually',
-        'Take readings during loading and unloading',
-        'Avoid exceeding elastic limit'
-      ],
+      title: 'Determination of Modulus of Rigidity by Static Method',
+      pageRange: '13-17',
+      objective:
+          'Determine the rigidity (shear) modulus η of a wire/rod using the static torsion method.',
+      theory: r'''
+For a cylindrical rod of length \(l\) and radius \(r\), torque–twist is:
+$$\tau=C\theta$$
+and
+$$C=\frac{\pi \eta r^{4}}{2l}$$
+From measured torque \( \tau \) and twist \( \theta \), the rigidity modulus follows as
+$$\eta=\frac{2l\,\tau}{\pi r^{4}\theta}$$
+''',
     ),
     LabExperiment(
       number: 4,
-      title: 'Newton\'s Rings Experiment',
-      module: 'Optics',
-      pageRange: '10-12',
-      objective: 'Determine radius of curvature of plano-convex lens using Newton\'s rings',
-      equipment: [
-        'Newton\'s rings apparatus',
-        'Sodium vapor lamp',
-        'Traveling microscope',
-        'Plano-convex lens',
-        'Optical flat glass plate'
-      ],
-      procedure: [
-        'Set up Newton\'s rings apparatus with sodium light',
-        'Focus microscope on ring pattern',
-        'Measure diameters of multiple rings',
-        'Calculate radius of curvature using formula: R = (Dₙ² - Dₘ²) / (4λ(n - m))',
-        'Verify with different ring orders'
-      ],
-      theory: 'Newton\'s rings are formed due to interference between light reflected from lens and glass plate surfaces.',
-      precautions: [
-        'Ensure lens and plate are clean',
-        'Use monochromatic light source',
-        'Align apparatus properly',
-        'Take multiple measurements'
-      ],
+      title: 'Laser Diffraction Experiment',
+      pageRange: '18-21',
+      objective: 'Determine the wavelength of the given laser using diffraction.',
+      theory: r'''
+For a grating (or equivalent spacing \(d\)), the diffraction condition is
+$$d\sin\theta=m\lambda$$
+Measuring \( \theta \) for order \( m \) yields the wavelength:
+\(\lambda=\frac{d\sin\theta}{m}\)
+''',
     ),
     LabExperiment(
       number: 5,
-      title: 'Diffraction Grating Experiment',
-      module: 'Optics',
-      pageRange: '13-15',
-      objective: 'Determine wavelength of light using diffraction grating',
-      equipment: [
-        'Diffraction grating',
-        'Spectrometer',
-        'Sodium vapor lamp',
-        'Reading telescope',
-        'Scale'
-      ],
-      procedure: [
-        'Set up spectrometer with sodium light',
-        'Adjust grating for normal incidence',
-        'Measure angles for first and second order spectra',
-        'Calculate wavelength using formula: λ = (d sinθ) / n',
-        'Compare with standard value'
-      ],
-      theory: 'Diffraction grating splits light into spectrum. Wavelength is calculated from diffraction angles.',
-      precautions: [
-        'Use monochromatic light',
-        'Ensure proper alignment',
-        'Take readings for both sides',
-        'Account for instrumental errors'
-      ],
+      title:
+          'Determination of the Bandgap of a Semiconductor by Four-Probe Method',
+      pageRange: '22-27',
+      objective:
+          'Determine the bandgap Eg by measuring resistivity vs temperature using the four-probe setup.',
+      theory: r'''
+For intrinsic conduction:
+$$\rho=A\exp\left(\frac{E_g}{2kT}\right)$$
+Thus a plot of \(\ln\rho\) vs \(1/T\) is linear with slope \(\frac{E_g}{2k}\).
+''',
+    ),
+    LabExperiment(
+      number: 6,
+      title: 'To Study the Characteristics of Solar Cell',
+      pageRange: '28-33',
+      objective:
+          'Obtain I–V characteristics of a solar cell; study power vs load, area dependence, and spectral response.',
+      theory: r'''
+A p–n junction under illumination generates photocurrent. Output power:
+$$P=VI$$
+Maximum power occurs near the knee of the I–V curve; response depends on spectrum and irradiance.
+''',
+    ),
+    LabExperiment(
+      number: 7,
+      title: 'Determination of Young’s Modulus',
+      pageRange: '34-39',
+      objective:
+          'Determine Young’s modulus of an elastic bar by flexure between knife-edges.',
+      theory: r'''
+For a simply supported bar (span \(L\)) with central load \(mg\), breadth \(b\), depth \(d\), and midpoint depression \(l\):
+$$Y=\frac{4mgL^{3}}{bd^{3}l}$$
+(Within elastic, small-deflection limits.)
+''',
+    ),
+    LabExperiment(
+      number: 8,
+      title: 'Franck–Hertz Experiment',
+      pageRange: '40-43',
+      objective:
+          'Verify the quantized nature of atomic energy levels via inelastic electron–atom collisions.',
+      theory: r'''
+Current vs accelerating voltage shows periodic minima/maxima corresponding to excitation quanta:
+$$\Delta E=h\nu$$
+''',
+    ),
+    LabExperiment(
+      number: 9,
+      title: 'Determination of Modulus of Rigidity by Dynamic Method',
+      pageRange: '44-48',
+      objective:
+          'Determine the rigidity modulus of the suspension wire using torsional oscillations.',
+      theory: r'''
+For torsional oscillations:
+$$T=2\pi\sqrt{\frac{I}{C}}$$
+and
+$$C=\frac{\pi \eta r^{4}}{2l}$$
+Using periods with and without a known inertia yields \(\eta\) from the change in \(T^{2}\).
+''',
+    ),
+    LabExperiment(
+      number: 10,
+      title: 'Laser-Based Free-Space Communication Experiment',
+      pageRange: '49-57',
+      objective:
+          'Demonstrate an analog free-space optical link; study alignment, range, and fidelity.',
+      theory: r'''
+A current-modulated laser transmits intensity variations; a photodiode and amplifier recover the signal. Link budget depends on divergence, aperture, and ambient noise.
+''',
+    ),
+    LabExperiment(
+      number: 11,
+      title: 'Particle Accelerator Experiment',
+      pageRange: '58-63',
+      objective:
+          'Explore basic accelerator concepts (acceleration and focusing) on the training setup.',
+      theory: r'''
+Charged particles gain energy from RF electric fields and are guided/focused by magnetic elements; diagnostics infer energy and beam analogs.
+''',
+    ),
+    LabExperiment(
+      number: 12,
+      title: 'Hall Effect Experiment',
+      pageRange: '64-73',
+      objective:
+          'Measure Hall voltage and determine the Hall coefficient and carrier type/density.',
+      theory: r'''
+With current \(I\), magnetic field \(B\), and sample thickness \(t\):
+$$V_H=\frac{R_H I B}{t}$$
+$$R_H=\frac{1}{ne}$$
+Sign of \(V_H\) identifies the majority carrier; magnitude gives \(n\).
+''',
+    ),
+    LabExperiment(
+      number: 13,
+      title: 'Determination of Electronic Charge by its Mass (e/m)',
+      pageRange: '74-78',
+      objective:
+          'Determine e/m of the electron by magnetic deflection (Helmholtz coils).',
+      theory: r'''
+For electrons accelerated by potential \(V\), bent by field \(B\) in a circle of radius \(r\):
+$$\frac{e}{m}=\frac{2V}{B^{2}r^{2}}$$
+''',
+    ),
+    LabExperiment(
+      number: 14,
+      title: 'Piezoelectric Effect Experiment',
+      pageRange: '79-84',
+      objective:
+          'Study direct and inverse piezoelectric effects—mechanical–electrical energy conversion.',
+      theory: r'''
+Under stress, certain crystals develop charge (direct effect); under electric field, they strain (inverse effect). Equivalent circuits model sensor/actuator behavior.
+''',
+    ),
+    LabExperiment(
+      number: 15,
+      title: 'Melde’s Experiment',
+      pageRange: '85-87',
+      objective:
+          'Form stationary waves in a string and determine frequency from string parameters.',
+      theory: r'''
+With length \(l\), tension \(T\), and linear density \( \mu \), for \(n\) loops:
+$$f=\frac{n}{2l}\sqrt{\frac{T}{\mu}}$$
+''',
+    ),
+    LabExperiment(
+      number: 16,
+      title: 'Thermoelectric Generator Experiment',
+      pageRange: '88-91',
+      objective:
+          'Demonstrate Seebeck power generation and study power vs load and temperature difference.',
+      theory: r'''
+A thermoelectric element develops an emf proportional to temperature difference:
+$$E=S\Delta T$$
+Power transfer is maximized near load matching; efficiency depends on material figure-of-merit \(ZT\).
+''',
     ),
   ];
 
-  // ----------------------- VIRTUAL EXPERIMENTS DATA -----------------------
+  // ----------------------- VIRTUAL EXPERIMENTS (UPDATED) -----------------------
   static final List<VirtualExperiment> _virtualExperiments = [
     VirtualExperiment(
-      title: 'Virtual Pendulum Simulation',
-      module: 'Oscillations',
-      platform: 'PhET Interactive Simulations',
-      url: 'https://phet.colorado.edu/sims/html/pendulum-lab/latest/pendulum-lab_en.html',
-      description: 'Interactive simulation to study pendulum motion, period, and energy conservation',
+      title: 'Thermo Couple – Seebeck Effect',
+      module: 'Heat & Thermodynamics',
+      platform: 'Virtual Labs (Amrita Vishwa Vidyapeetham)',
+      url:
+          'https://htv-au.vlabs.ac.in/Thermo_Couple_Seebeck_Effect/experiment.html',
+      description:
+          'Simulate the Seebeck effect for different thermocouple types, measure thermo-emf versus temperature difference, and estimate the Seebeck coefficient.',
       features: [
-        'Adjust pendulum length and mass',
-        'Change gravity and damping',
-        'Plot position vs time graphs',
-        'Analyze energy transformations'
+        'Choose thermocouple type (e.g., Type R)',
+        'Set junction temperatures with sliders',
+        'Read generated EMF on a voltmeter',
+        'Analyze ΔT vs EMF graph to estimate sensitivity'
       ],
       learningOutcomes: [
-        'Understand SHM in pendulums',
-        'Explore factors affecting period',
-        'Study energy conservation',
-        'Analyze damping effects'
+        'Verify proportionality of thermocouple EMF to temperature difference (Seebeck effect)',
+        'Compare sensitivities of different thermocouple types',
+        'Calibrate/estimate the Seebeck coefficient from measured data',
+        'Interpret graphs and basic measurement procedure'
       ],
     ),
     VirtualExperiment(
-      title: 'Wave Interference Simulator',
-      module: 'Optics',
-      platform: 'PhET Interactive Simulations',
-      url: 'https://phet.colorado.edu/sims/html/wave-interference/latest/wave-interference_en.html',
-      description: 'Simulate wave interference patterns with adjustable parameters',
+      title: 'Black Body Radiation (Stefan’s Law)',
+      module: 'Heat & Thermodynamics',
+      platform: 'Virtual Labs (Amrita Vishwa Vidyapeetham)',
+      url:
+          'https://htv-au.vlabs.ac.in/heat-thermodynamics/Black_Body_Radiation/experiment.html',
+      description:
+          'Interactive study of black-body radiation. Vary temperatures and observe radiative behavior to validate Stefan–Boltzmann dependence.',
       features: [
-        'Control wavelength and amplitude',
-        'Adjust slit separation',
-        'View interference patterns',
-        'Measure fringe spacing'
+        'Adjust source and surrounding temperatures',
+        'Use simulator interface with controllable variables',
+        'Qualitatively/quantitatively explore power ∝ T⁴ behavior',
+        'Connect observations to emissivity and ideal black-body concepts'
       ],
       learningOutcomes: [
-        'Understand interference principles',
-        'Explore diffraction patterns',
-        'Study wave superposition',
-        'Analyze fringe formation'
+        'Understand black-body radiation fundamentals and Stefan–Boltzmann law',
+        'Relate temperature to radiative power and peak behavior',
+        'Recognize role of emissivity and environment',
+        'Practice data reading and basic model fitting'
       ],
     ),
     VirtualExperiment(
-      title: 'Circuit Construction Kit',
-      module: 'Electromagnetic Theory',
-      platform: 'PhET Interactive Simulations',
-      url: 'https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html',
-      description: 'Build and analyze electrical circuits virtually',
-      features: [
-        'Drag and drop circuit components',
-        'Measure voltage and current',
-        'Study Ohm\'s law and Kirchhoff\'s laws',
-        'Analyze series and parallel circuits'
-      ],
-      learningOutcomes: [
-        'Understand circuit principles',
-        'Apply Kirchhoff\'s laws',
-        'Study electrical measurements',
-        'Analyze circuit behavior'
-      ],
-    ),
-    VirtualExperiment(
-      title: 'Quantum Tunneling Demo',
+      title:
+          'Schrödinger’s Equation in the 1-Dimensional Potential Well (MATLAB)',
       module: 'Quantum Mechanics',
-      platform: 'Online Physics Simulations',
-      url: 'https://www.falstad.com/quantum/',
-      description: 'Visualize quantum tunneling through potential barriers',
+      platform: 'MATLAB Central File Exchange',
+      url:
+          'https://in.mathworks.com/matlabcentral/fileexchange/75495-schrodinger-s-equation-in-the-1-dimensional-potential-well?s_tid=srchtitle_site_search_1_schrodinger%20equation',
+      description:
+          'MATLAB scripts to compute eigen-energies and eigenfunctions for a 1D bound potential well; runnable locally or in MATLAB Online.',
       features: [
-        'Adjust barrier height and width',
-        'Control particle energy',
-        'View probability distributions',
-        'Study transmission coefficients'
+        'Compute bound-state eigen-energies for a 1D potential well',
+        'Visualize corresponding wavefunctions',
+        'Open directly in MATLAB Online from File Exchange',
+        'Explore how well parameters affect quantized levels'
       ],
       learningOutcomes: [
-        'Understand quantum tunneling',
-        'Explore wave-particle duality',
-        'Study probability in quantum mechanics',
-        'Analyze barrier penetration'
-      ],
-    ),
-    VirtualExperiment(
-      title: 'Molecular Dynamics Simulation',
-      module: 'Statistical Mechanics',
-      platform: 'PhET Interactive Simulations',
-      url: 'https://phet.colorado.edu/sims/html/states-of-matter/latest/states-of-matter_en.html',
-      description: 'Explore states of matter and phase transitions',
-      features: [
-        'Control temperature and pressure',
-        'Observe molecular motion',
-        'Study phase changes',
-        'Analyze particle interactions'
-      ],
-      learningOutcomes: [
-        'Understand molecular behavior',
-        'Explore phase transitions',
-        'Study thermal equilibrium',
-        'Analyze kinetic theory'
+        'Solve the time-independent Schrödinger equation (1D bound states)',
+        'Interpret boundary conditions, nodes, and normalization',
+        'Connect quantized energies with potential geometry',
+        'Build intuition for eigenvalue problems in quantum mechanics'
       ],
     ),
   ];
@@ -269,48 +293,39 @@ class _LabPageState extends State<LabPage> {
   List<LabExperiment> get _filteredLabExperiments {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return _labExperiments;
-    bool matches(LabExperiment exp) {
-      if (exp.title.toLowerCase().contains(q)) return true;
-      if (exp.module.toLowerCase().contains(q)) return true;
-      if (exp.objective.toLowerCase().contains(q)) return true;
-      if (exp.equipment.any((e) => e.toLowerCase().contains(q))) return true;
-      if (exp.pageRange.toLowerCase().contains(q)) return true;
-      return false;
-    }
-    return _labExperiments.where(matches).toList();
+    return _labExperiments
+        .where((exp) =>
+            exp.title.toLowerCase().contains(q) ||
+            exp.objective.toLowerCase().contains(q))
+        .toList();
   }
 
   List<VirtualExperiment> get _filteredVirtualExperiments {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return _virtualExperiments;
-    bool matches(VirtualExperiment exp) {
-      if (exp.title.toLowerCase().contains(q)) return true;
-      if (exp.module.toLowerCase().contains(q)) return true;
-      if (exp.description.toLowerCase().contains(q)) return true;
-      if (exp.features.any((f) => f.toLowerCase().contains(q))) return true;
-      return false;
-    }
-    return _virtualExperiments.where(matches).toList();
+    return _virtualExperiments
+        .where((exp) =>
+            exp.title.toLowerCase().contains(q) ||
+            exp.module.toLowerCase().contains(q) ||
+            exp.description.toLowerCase().contains(q) ||
+            exp.features.any((f) => f.toLowerCase().contains(q)))
+        .toList();
   }
 
   // ----------------------- UI -----------------------
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lab Experiments'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Lab Experiments'), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Search bar
           Card(
             elevation: 2,
             color: cs.surfaceContainerHighest,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -321,9 +336,10 @@ class _LabPageState extends State<LabPage> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Search experiments, modules, or equipment',
+                        hintText: 'Search experiments (title or objective)',
                         border: InputBorder.none,
-                        hintStyle: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.7)),
+                        hintStyle: TextStyle(
+                            color: cs.onSurfaceVariant.withOpacity(0.7)),
                       ),
                       textInputAction: TextInputAction.search,
                       onChanged: (v) => setState(() => _query = v),
@@ -332,7 +348,7 @@ class _LabPageState extends State<LabPage> {
                   if (_query.isNotEmpty)
                     IconButton(
                       tooltip: 'Clear',
-                      icon: Icon(Icons.close, size: 20),
+                      icon: const Icon(Icons.close, size: 20),
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _query = '');
@@ -344,18 +360,13 @@ class _LabPageState extends State<LabPage> {
           ),
           const SizedBox(height: 16),
 
-          // Main heading: Lab Experiments
           Row(
             children: [
               Icon(Icons.science_outlined, color: cs.primary, size: 24),
               const SizedBox(width: 8),
-              Text(
-                'Lab Experiments',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface,
-                ),
-              ),
+              Text('Lab Experiments',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600, color: cs.onSurface)),
             ],
           ),
           const SizedBox(height: 12),
@@ -363,27 +374,22 @@ class _LabPageState extends State<LabPage> {
           if (_filteredLabExperiments.isEmpty)
             const _EmptyCard(text: 'No lab experiments match your search.')
           else
-            ..._filteredLabExperiments.map((exp) => _LabExperimentCard(experiment: exp)),
+            ..._filteredLabExperiments
+                .map((exp) => _LabExperimentCard(experiment: exp)),
 
           const SizedBox(height: 20),
 
-          // Secondary heading: Virtual Experiments
           Row(
             children: [
               Icon(Icons.computer_outlined, color: cs.tertiary, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Virtual Experiments',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface,
-                ),
-              ),
+              Text('Virtual Experiments',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600, color: cs.onSurface)),
             ],
           ),
           const SizedBox(height: 12),
 
-          // Virtual Experiments (expandable)
           _ExpandableCard(
             title: 'Virtual Lab Simulations',
             expanded: _expandVirtual,
@@ -402,28 +408,18 @@ class _LabPageState extends State<LabPage> {
 }
 
 // ======================= MODELS =======================
-
 class LabExperiment {
   final int number;
   final String title;
-  final String module;
   final String pageRange;
   final String objective;
-  final List<String> equipment;
-  final List<String> procedure;
   final String theory;
-  final List<String> precautions;
-
   const LabExperiment({
     required this.number,
     required this.title,
-    required this.module,
     required this.pageRange,
     required this.objective,
-    required this.equipment,
-    required this.procedure,
     required this.theory,
-    required this.precautions,
   });
 }
 
@@ -435,7 +431,6 @@ class VirtualExperiment {
   final String description;
   final List<String> features;
   final List<String> learningOutcomes;
-
   const VirtualExperiment({
     required this.title,
     required this.module,
@@ -448,15 +443,14 @@ class VirtualExperiment {
 }
 
 // ======================= WIDGETS =======================
-
 class _LabExperimentCard extends StatelessWidget {
   final LabExperiment experiment;
-
   const _LabExperimentCard({required this.experiment});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium;
 
     return Card(
       elevation: 1,
@@ -471,60 +465,32 @@ class _LabExperimentCard extends StatelessWidget {
           title: Row(
             children: [
               Expanded(
-                child: Text(
-                  'Exp ${experiment.number} — ${experiment.title}',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
+                child: Text('Exp ${experiment.number} — ${experiment.title}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 16)),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: cs.secondaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Pages: ${experiment.pageRange ?? 'N/A'}',
-                  style: TextStyle(color: cs.onSecondaryContainer, fontSize: 11, fontWeight: FontWeight.w600),
-                ),
+                    color: cs.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12)),
+                child: Text('Pages: ${experiment.pageRange}',
+                    style: TextStyle(
+                        color: cs.onSecondaryContainer,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600)),
               ),
             ],
           ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Module: ${experiment.module}',
-              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-            ),
-          ),
           children: [
-            // Objective
             const _Subheading(text: 'Objective'),
             const SizedBox(height: 6),
-            Text(experiment.objective),
+            Text(experiment.objective, style: bodyStyle),
             const SizedBox(height: 12),
-
-            // Equipment
-            const _Subheading(text: 'Equipment Required'),
-            const SizedBox(height: 6),
-            _BulletedList(items: experiment.equipment),
-            const SizedBox(height: 12),
-
-            // Procedure
-            const _Subheading(text: 'Procedure'),
-            const SizedBox(height: 6),
-            _NumberedList(items: experiment.procedure),
-            const SizedBox(height: 12),
-
-            // Theory
             const _Subheading(text: 'Theory'),
             const SizedBox(height: 6),
-            Text(experiment.theory),
-            const SizedBox(height: 12),
-
-            // Precautions
-            const _Subheading(text: 'Precautions'),
-            const SizedBox(height: 6),
-            _BulletedList(items: experiment.precautions),
+            _LaTeXBlock(experiment.theory, style: bodyStyle),
           ],
         ),
       ),
@@ -534,8 +500,34 @@ class _LabExperimentCard extends StatelessWidget {
 
 class _VirtualExperimentCard extends StatelessWidget {
   final VirtualExperiment experiment;
-
   const _VirtualExperimentCard({required this.experiment});
+
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    try {
+      final ok = await launchUrl(
+        uri,
+        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
+      );
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open ${experiment.title}'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to open link: $e'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -548,82 +540,59 @@ class _VirtualExperimentCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    experiment.title,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: cs.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    experiment.module,
-                    style: TextStyle(color: cs.onTertiaryContainer, fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(
+              child: Text(
+                experiment.title,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Platform: ${experiment.platform}',
-              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              experiment.description,
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-
-            // Features
-            const _Subheading(text: 'Features'),
-            const SizedBox(height: 6),
-            _BulletedList(items: experiment.features),
-            const SizedBox(height: 12),
-
-            // Learning Outcomes
-            const _Subheading(text: 'Learning Outcomes'),
-            const SizedBox(height: 6),
-            _BulletedList(items: experiment.learningOutcomes),
-            const SizedBox(height: 12),
-
-            // Launch Button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  // TODO: Implement URL launch
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Opening ${experiment.title}...'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.launch, size: 18),
-                label: const Text('Launch Simulation'),
-                style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: cs.tertiaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                experiment.module,
+                style: TextStyle(
+                  color: cs.onTertiaryContainer,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
-        ),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            'Platform: ${experiment.platform}',
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          Text(experiment.description, style: const TextStyle(fontSize: 14)),
+          const SizedBox(height: 12),
+          const _Subheading(text: 'Features'),
+          const SizedBox(height: 6),
+          _BulletedList(items: experiment.features),
+          const SizedBox(height: 12),
+          const _Subheading(text: 'Learning Outcomes'),
+          const SizedBox(height: 6),
+          _BulletedList(items: experiment.learningOutcomes),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _launchUrl(context, experiment.url),
+              icon: const Icon(Icons.launch, size: 18),
+              label: const Text('Launch Simulation'),
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ]),
       ),
     );
   }
@@ -634,7 +603,6 @@ class _ExpandableCard extends StatelessWidget {
   final bool expanded;
   final ValueChanged<bool> onChanged;
   final Widget child;
-
   const _ExpandableCard({
     required this.title,
     required this.expanded,
@@ -645,7 +613,6 @@ class _ExpandableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
     return Card(
       elevation: 1,
       color: cs.surfaceContainerLowest,
@@ -657,7 +624,10 @@ class _ExpandableCard extends StatelessWidget {
           onExpansionChanged: onChanged,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+          title: const Text(
+            'Virtual Lab Simulations',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
           children: [child],
         ),
       ),
@@ -668,7 +638,6 @@ class _ExpandableCard extends StatelessWidget {
 class _Subheading extends StatelessWidget {
   final String text;
   const _Subheading({required this.text});
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -685,7 +654,6 @@ class _Subheading extends StatelessWidget {
 class _BulletedList extends StatelessWidget {
   final List<String> items;
   const _BulletedList({required this.items});
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -707,37 +675,156 @@ class _BulletedList extends StatelessWidget {
   }
 }
 
-class _NumberedList extends StatelessWidget {
-  final List<String> items;
-  const _NumberedList({required this.items});
+/// Inline + block LaTeX renderer for easy_latex.
+///
+/// - Inline delimiters: \( ... \)
+/// - Block delimiters:  $$ ... $$, \[ ... \]
+/// - Sanitizes macros that easy_latex doesn't support (\!, \quad, \qquad, \left, \right, \,, \tfrac, \text{...}).
+class _LaTeXBlock extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+  const _LaTeXBlock(this.text, {this.style});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: items
-          .asMap()
-          .entries
-          .map(
-            (entry) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${entry.key + 1}.  '),
-                  Expanded(child: Text(entry.value)),
-                ],
+    final defaultStyle = style ?? Theme.of(context).textTheme.bodyMedium;
+    final tokens = _tokenize(text);
+
+    // Build runs: sequences of inline content collapsed into one RichText,
+    // with block equations emitted as their own widgets.
+    final children = <Widget>[];
+    final inlineBuffer = <_InlinePiece>[];
+
+    void flushInline() {
+      if (inlineBuffer.isEmpty) return;
+      children.add(
+        _InlineRichText(pieces: List.of(inlineBuffer), style: defaultStyle),
+      );
+      inlineBuffer.clear();
+    }
+
+    for (final t in tokens) {
+      if (t.kind == _TokKind.blockMath) {
+        flushInline();
+        final f = _sanitizeLatex(t.content);
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Latex(
+                f,
+                fontSize: (defaultStyle?.fontSize ?? 16),
+                color: defaultStyle?.color ?? Theme.of(context).colorScheme.onSurface,
               ),
             ),
-          )
-          .toList(),
-    );
+          ),
+        );
+      } else if (t.kind == _TokKind.inlineMath) {
+        inlineBuffer.add(_InlinePiece.math(_sanitizeLatex(t.content)));
+      } else {
+        if (t.content.isNotEmpty) {
+          inlineBuffer.add(_InlinePiece.text(t.content));
+        }
+      }
+    }
+    flushInline();
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: children);
+  }
+
+  static List<_Token> _tokenize(String input) {
+    final re =
+        RegExp(r'(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\))', multiLine: true);
+    final out = <_Token>[];
+    int last = 0;
+    for (final m in re.allMatches(input)) {
+      if (m.start > last) {
+        out.add(_Token(_TokKind.text, input.substring(last, m.start)));
+      }
+      final raw = m.group(0)!;
+      if (raw.startsWith(r'$$')) {
+        out.add(_Token(_TokKind.blockMath, raw.substring(2, raw.length - 2)));
+      } else if (raw.startsWith(r'\[')) {
+        out.add(_Token(_TokKind.blockMath, raw.substring(2, raw.length - 2)));
+      } else {
+        out.add(_Token(_TokKind.inlineMath, raw.substring(2, raw.length - 2)));
+      }
+      last = m.end;
+    }
+    if (last < input.length) {
+      out.add(_Token(_TokKind.text, input.substring(last)));
+    }
+    return out;
+  }
+
+  static String _sanitizeLatex(String s) {
+    String t = s;
+    // Remove spacing / sizing macros that cause red boxes or odd wraps
+    t = t.replaceAll(r'\!', '');
+    t = t.replaceAll(r'\,', ' ');
+    t = t.replaceAll(r'\quad', ' ');
+    t = t.replaceAll(r'\qquad', ' ');
+    t = t.replaceAll(r'\left', '');
+    t = t.replaceAll(r'\right', '');
+    // Replace \tfrac with \frac
+    t = t.replaceAll(r'\tfrac', r'\frac');
+    // Strip \text{...} -> just its contents
+    t = t.replaceAllMapped(RegExp(r'\\text\{([^}]*)\}'), (m) => m.group(1) ?? '');
+    // Normalize multiple spaces
+    t = t.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return t;
+  }
+}
+
+enum _TokKind { text, inlineMath, blockMath }
+
+class _Token {
+  final _TokKind kind;
+  final String content;
+  _Token(this.kind, this.content);
+}
+
+class _InlinePiece {
+  final bool isMath;
+  final String textOrFormula;
+  _InlinePiece.text(this.textOrFormula) : isMath = false;
+  _InlinePiece.math(this.textOrFormula) : isMath = true;
+}
+
+class _InlineRichText extends StatelessWidget {
+  final List<_InlinePiece> pieces;
+  final TextStyle? style;
+  const _InlineRichText({required this.pieces, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final spans = <InlineSpan>[];
+    for (final p in pieces) {
+      if (p.isMath) {
+        spans.add(
+          WidgetSpan(
+            baseline: TextBaseline.alphabetic,
+            alignment: PlaceholderAlignment.baseline,
+            child: Latex(
+              p.textOrFormula,
+              fontSize: (style?.fontSize ?? 16),
+              color: style?.color ?? Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        );
+      } else {
+        // preserve original text (including newlines/spaces)
+        spans.add(TextSpan(text: p.textOrFormula, style: style));
+      }
+    }
+    return RichText(text: TextSpan(children: spans, style: style));
   }
 }
 
 class _EmptyCard extends StatelessWidget {
   final String text;
   const _EmptyCard({required this.text});
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -745,10 +832,7 @@ class _EmptyCard extends StatelessWidget {
       elevation: 0,
       color: cs.surfaceContainerLowest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(text),
-      ),
+      child: Padding(padding: const EdgeInsets.all(16), child: Text(text)),
     );
   }
 }
