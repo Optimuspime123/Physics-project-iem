@@ -40,13 +40,13 @@ A comprehensive mobile application designed to help students of IEM Salt Lake wi
   - Virtual experiment simulations
 
 ### 🎨 User Experience
-- **Modern Material Design 3** interface
+- **Modern Material Design 3 Expressive** interface
 - **Dark/Light theme** toggle with persistence
-- **Search functionality** across all content
+- **Search functionality** across study content for easy access
 - **Expandable sections** for organized content
 - **Inspirational quotes** on home screen
 - **PDF viewer** integration for study materials
-- **External link** support for additional resources
+- **External links** for additional resources
 
 ### 👥 Team & Credits
 - Developer information
