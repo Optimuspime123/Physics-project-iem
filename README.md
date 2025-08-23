@@ -53,6 +53,14 @@ A comprehensive mobile application designed to help students of IEM Salt Lake wi
 - Faculty details
 - Image credits and acknowledgments
 
+## Installation
+
+To install the app on your Android device:
+
+1. Download the latest APK from the [GitHub Releases](https://github.com/Optimuspime123/Physics-project-iem/releases/download/v1.0.0/physics.apk).
+2. On your Android device, go to **Settings > Security** (or **Privacy** on newer versions) and enable **Install from Unknown Sources** if prompted.
+3. Open the downloaded APK file and follow the on-screen instructions to install the app.
+
 ## Academic Context
 
 This app was created as part of the academic curriculum at IEM Salt Lake to:
