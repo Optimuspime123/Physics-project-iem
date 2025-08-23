@@ -20,15 +20,15 @@ class TeamPage extends StatelessWidget {
           _buildSectionTitle('Developers'),
           const SizedBox(height: 10),
 
-          // Specific image for Saswatayu
-          const PersonTile(
-            name: 'Saswatayu Sengupta',
-            role: 'Lead Developer',
-            imageUrl: 'https://files.catbox.moe/lc4nun.JPG',
-          ),
+            // Specific image for Saswatayu
+            const PersonTile(
+              name: 'Saswatayu Sengupta',
+              role: 'Lead Developer',
+              imageUrl: 'lib/assets/saswatayu.jpg',
+            ),
 
-          // Others use default Adobe Stock image 
-          const PersonTile(name: 'Developer 2', role: 'WIP'),
+            // Others use default Adobe Stock image
+            const PersonTile(name: 'Samriddhi Pal Chowdhury', role: 'Creative Director', imageUrl: 'lib/assets/samridhhi.jpg'),
           const PersonTile(name: 'Developer 3', role: 'WIP'),
 
           const SizedBox(height: 30),
@@ -111,6 +111,9 @@ class PersonTile extends StatelessWidget {
     final avatarUrl =
         (imageUrl == null || imageUrl!.isEmpty) ? _defaultAvatar : imageUrl!;
 
+    final isAsset = avatarUrl.startsWith('lib/assets/');
+    final ImageProvider imageProvider = isAsset ? AssetImage(avatarUrl) : NetworkImage(avatarUrl);
+
     return Card(
       elevation: 2,
       shape: const RoundedRectangleBorder(
@@ -120,7 +123,7 @@ class PersonTile extends StatelessWidget {
         leading: CircleAvatar(
           radius: 25,
           backgroundColor: const Color.fromARGB(255, 165, 179, 195),
-          backgroundImage: NetworkImage(avatarUrl),
+          backgroundImage: imageProvider,
           onBackgroundImageError: (_, __) {},
         ),
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),

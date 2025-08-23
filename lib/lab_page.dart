@@ -1,7 +1,21 @@
+// lab_page.dart
+// Requires: url_launcher, path_provider, open_filex
+// Asset: lib/assets/pdfs/LabManual.pdf (included in pubspec assets)
+
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_latex/easy_latex.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
+
+// =====================================================
+// ================  LAB PAGE (DROP-IN)  ===============
+// =====================================================
 
 class LabPage extends StatefulWidget {
   const LabPage({super.key});
@@ -312,6 +326,108 @@ Power transfer is maximized near load matching; efficiency depends on material f
         .toList();
   }
 
+  // ----------------------- PDF OPEN HELPERS -----------------------
+  static const String _assetPdfPath = 'lib/assets/pdfs/LabManual.pdf';
+
+  Future<String> _ensureLabManualCached() async {
+    // Cache the asset into temp dir so external PDF apps can open it.
+    final dir = await getTemporaryDirectory();
+    final destPath = '${dir.path}/LabManual.pdf';
+    final file = File(destPath);
+    if (await file.exists()) return destPath;
+
+    final data = await rootBundle.load(_assetPdfPath);
+    final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    await file.writeAsBytes(bytes, flush: true);
+    return destPath;
+  }
+
+  int _startPagePlusTwo(String pageRange) {
+    // Extract the first integer in the range and add 2.
+    // Handles formats like "01-06", "7–12", "7 — 12", etc.
+    final m = RegExp(r'(\d{1,4})').firstMatch(pageRange);
+    final first = int.tryParse(m?.group(1) ?? '') ?? 1;
+    final page = first + 2;
+    return page < 1 ? 1 : page;
+  }
+
+  void _toast(ScaffoldMessengerState messenger, String msg) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Future<void> _openLabManualFromRange(
+      BuildContext context, String pageRange) async {
+    // Capture messenger BEFORE any await to avoid using BuildContext after async gaps.
+    final messenger = ScaffoldMessenger.of(context);
+    final page = _startPagePlusTwo(pageRange);
+
+    if (kIsWeb) {
+      // Asset key path appears under /assets/ in Flutter web build
+      final assetUrl = 'assets/$_assetPdfPath';
+      final candidates = <Uri>[
+        Uri.parse('$assetUrl#page=$page'),
+        Uri.parse('$assetUrl?page=$page'),
+        Uri.parse(assetUrl),
+      ];
+      for (final uri in candidates) {
+        final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        if (ok) return;
+      }
+      _toast(messenger, 'Could not open the PDF in browser.');
+      return;
+    }
+
+    try {
+      final filePath = await _ensureLabManualCached();
+
+      // Try #page=
+      final uriWithFragment =
+          Uri(scheme: 'file', path: filePath, fragment: 'page=$page');
+      var launched = await launchUrl(
+        uriWithFragment,
+        mode: LaunchMode.externalApplication,
+      );
+
+      // Try ?page=
+      if (!launched) {
+        final uriWithQuery = Uri(
+          scheme: 'file',
+          path: filePath,
+          queryParameters: {'page': '$page'},
+        );
+        launched = await launchUrl(
+          uriWithQuery,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+
+      // Fallback: open normally via OpenFilex
+      if (!launched) {
+        final res = await OpenFilex.open(filePath, type: 'application/pdf');
+        if (res.type != ResultType.done) {
+          _toast(messenger, 'Could not open PDF: ${res.message ?? 'Unknown error'}');
+        }
+      }
+    } catch (e) {
+      // Last resort: try to open asset without hints via OpenFilex (after cache)
+      try {
+        final filePath = await _ensureLabManualCached();
+        final res = await OpenFilex.open(filePath, type: 'application/pdf');
+        if (res.type != ResultType.done) {
+          _toast(messenger, 'Failed to open PDF: ${res.message ?? e.toString()}');
+        }
+      } catch (_) {
+        _toast(messenger, 'Failed to open PDF.');
+      }
+    }
+  }
+
   // ----------------------- UI -----------------------
   @override
   Widget build(BuildContext context) {
@@ -322,10 +438,11 @@ Power transfer is maximized near load matching; efficiency depends on material f
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           Card(
-            elevation: 2,
+            elevation: 1,
             color: cs.surfaceContainerHighest,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shadowColor: cs.shadow,
+            surfaceTintColor: cs.surfaceTint,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -339,7 +456,7 @@ Power transfer is maximized near load matching; efficiency depends on material f
                         hintText: 'Search experiments (title or objective)',
                         border: InputBorder.none,
                         hintStyle: TextStyle(
-                            color: cs.onSurfaceVariant.withOpacity(0.7)),
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
                       ),
                       textInputAction: TextInputAction.search,
                       onChanged: (v) => setState(() => _query = v),
@@ -353,6 +470,15 @@ Power transfer is maximized near load matching; efficiency depends on material f
                         _searchController.clear();
                         setState(() => _query = '');
                       },
+                    )
+                  else
+                    IconButton(
+                      tooltip: 'Filter',
+                      icon: Icon(Icons.filter_list,
+                          color: cs.onSurfaceVariant, size: 20),
+                      onPressed: () {
+                        // Could implement filter functionality here
+                      },
                     ),
                 ],
               ),
@@ -360,33 +486,86 @@ Power transfer is maximized near load matching; efficiency depends on material f
           ),
           const SizedBox(height: 16),
 
-          Row(
-            children: [
-              Icon(Icons.science_outlined, color: cs.primary, size: 24),
-              const SizedBox(width: 8),
-              Text('Lab Experiments',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600, color: cs.onSurface)),
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.science_outlined, color: cs.onPrimaryContainer, size: 24),
+                const SizedBox(width: 12),
+                Text('Lab Experiments',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: cs.onPrimaryContainer)),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cs.onPrimaryContainer.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${_filteredLabExperiments.length}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: cs.onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
 
           if (_filteredLabExperiments.isEmpty)
             const _EmptyCard(text: 'No lab experiments match your search.')
           else
-            ..._filteredLabExperiments
-                .map((exp) => _LabExperimentCard(experiment: exp)),
+            ... _filteredLabExperiments.map(
+              (exp) => _LabExperimentCard(
+                experiment: exp,
+                onOpenManual: _openLabManualFromRange,
+              ),
+            ),
 
           const SizedBox(height: 20),
 
-          Row(
-            children: [
-              Icon(Icons.computer_outlined, color: cs.tertiary, size: 20),
-              const SizedBox(width: 8),
-              Text('Virtual Experiments',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600, color: cs.onSurface)),
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: cs.tertiaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.computer_outlined,
+                    color: cs.onTertiaryContainer, size: 20),
+                const SizedBox(width: 12),
+                Text('Virtual Experiments',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: cs.onTertiaryContainer)),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cs.onTertiaryContainer.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${_filteredVirtualExperiments.length}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: cs.onTertiaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -445,7 +624,13 @@ class VirtualExperiment {
 // ======================= WIDGETS =======================
 class _LabExperimentCard extends StatelessWidget {
   final LabExperiment experiment;
-  const _LabExperimentCard({required this.experiment});
+  final Future<void> Function(BuildContext context, String pageRange)
+      onOpenManual;
+
+  const _LabExperimentCard({
+    required this.experiment,
+    required this.onOpenManual,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -455,42 +640,98 @@ class _LabExperimentCard extends StatelessWidget {
     return Card(
       elevation: 1,
       color: cs.surfaceContainerLowest,
+      shadowColor: cs.shadow,
+      surfaceTintColor: cs.surfaceTint,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           title: Row(
             children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    '${experiment.number}',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: cs.onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text('Exp ${experiment.number} — ${experiment.title}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 16)),
+                child: Text(
+                  experiment.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface,
+                      ),
+                ),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                    color: cs.secondaryContainer,
-                    borderRadius: BorderRadius.circular(12)),
-                child: Text('Pages: ${experiment.pageRange}',
-                    style: TextStyle(
+                  color: cs.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Pages: ${experiment.pageRange}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: cs.onSecondaryContainer,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600)),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
               ),
             ],
           ),
           children: [
             const _Subheading(text: 'Objective'),
-            const SizedBox(height: 6),
-            Text(experiment.objective, style: bodyStyle),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(experiment.objective, style: bodyStyle),
+            ),
+            const SizedBox(height: 16),
             const _Subheading(text: 'Theory'),
-            const SizedBox(height: 6),
-            _LaTeXBlock(experiment.theory, style: bodyStyle),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: _LaTeXBlock(experiment.theory, style: bodyStyle),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: () => onOpenManual(context, experiment.pageRange),
+                icon: const Icon(Icons.picture_as_pdf, size: 18),
+                label: const Text('View in lab manual'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -503,6 +744,8 @@ class _VirtualExperimentCard extends StatelessWidget {
   const _VirtualExperimentCard({required this.experiment});
 
   Future<void> _launchUrl(BuildContext context, String url) async {
+    // Capture messenger BEFORE await to avoid using context across async gap.
+    final messenger = ScaffoldMessenger.of(context);
     final uri = Uri.parse(url);
     try {
       final ok = await launchUrl(
@@ -510,7 +753,7 @@ class _VirtualExperimentCard extends StatelessWidget {
         mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
       );
       if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Could not open ${experiment.title}'),
             behavior: SnackBarBehavior.floating,
@@ -519,7 +762,7 @@ class _VirtualExperimentCard extends StatelessWidget {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Failed to open link: $e'),
           behavior: SnackBarBehavior.floating,
@@ -536,16 +779,21 @@ class _VirtualExperimentCard extends StatelessWidget {
     return Card(
       elevation: 1,
       color: cs.surfaceContainerLowest,
+      shadowColor: cs.shadow,
+      surfaceTintColor: cs.surfaceTint,
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(
               child: Text(
                 experiment.title,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
               ),
             ),
             Container(
@@ -556,41 +804,89 @@ class _VirtualExperimentCard extends StatelessWidget {
               ),
               child: Text(
                 experiment.module,
-                style: TextStyle(
-                  color: cs.onTertiaryContainer,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cs.onTertiaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ),
           ]),
-          const SizedBox(height: 6),
-          Text(
-            'Platform: ${experiment.platform}',
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-          ),
           const SizedBox(height: 8),
-          Text(experiment.description, style: const TextStyle(fontSize: 14)),
-          const SizedBox(height: 12),
-          const _Subheading(text: 'Features'),
-          const SizedBox(height: 6),
-          _BulletedList(items: experiment.features),
-          const SizedBox(height: 12),
-          const _Subheading(text: 'Learning Outcomes'),
-          const SizedBox(height: 6),
-          _BulletedList(items: experiment.learningOutcomes),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => _launchUrl(context, experiment.url),
-              icon: const Icon(Icons.launch, size: 18),
-              label: const Text('Launch Simulation'),
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Text(
+              'Platform: ${experiment.platform}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            experiment.description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: cs.onSurface,
+                ),
+          ),
+          const SizedBox(height: 16),
+          const _Subheading(text: 'Features'),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: _BulletedList(items: experiment.features),
+          ),
+          const SizedBox(height: 16),
+          const _Subheading(text: 'Learning Outcomes'),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: _BulletedList(items: experiment.learningOutcomes),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _launchUrl(context, experiment.url),
+                  icon: const Icon(Icons.visibility, size: 18),
+                  label: const Text('Preview'),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: cs.outline),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _launchUrl(context, experiment.url),
+                  icon: const Icon(Icons.launch, size: 18),
+                  label: const Text('Launch'),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
           ),
         ]),
       ),
@@ -616,17 +912,32 @@ class _ExpandableCard extends StatelessWidget {
     return Card(
       elevation: 1,
       color: cs.surfaceContainerLowest,
+      shadowColor: cs.shadow,
+      surfaceTintColor: cs.surfaceTint,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: expanded,
           onExpansionChanged: onChanged,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          title: const Text(
-            'Virtual Lab Simulations',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          title: Row(
+            children: [
+              Icon(
+                Icons.expand_more,
+                color: cs.onSurfaceVariant,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Virtual Lab Simulations',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+              ),
+            ],
           ),
           children: [child],
         ),
@@ -641,12 +952,25 @@ class _Subheading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: cs.onSurfaceVariant,
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: cs.primary,
+            borderRadius: BorderRadius.circular(2),
           ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: cs.onSurface,
+              ),
+        ),
+      ],
     );
   }
 }
@@ -656,16 +980,33 @@ class _BulletedList extends StatelessWidget {
   const _BulletedList({required this.items});
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       children: items
           .map(
-            (t) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+            (text) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('•  '),
-                  Expanded(child: Text(t)),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.only(top: 6),
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurface,
+                          ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -831,8 +1172,29 @@ class _EmptyCard extends StatelessWidget {
     return Card(
       elevation: 0,
       color: cs.surfaceContainerLowest,
+      shadowColor: cs.shadow,
+      surfaceTintColor: cs.surfaceTint,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(padding: const EdgeInsets.all(16), child: Text(text)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 48,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              text,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -430,49 +430,90 @@ class _TheoryPageState extends State<TheoryPage> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Search bar
-          Card(
-            elevation: 0,
-            color: cs.surfaceContainerHighest,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: cs.onSurfaceVariant),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: 'Search modules, topics, or labs',
-                        border: InputBorder.none,
-                      ),
-                      textInputAction: TextInputAction.search,
-                      onChanged: (v) => setState(() => _query = v),
-                    ),
-                  ),
-                  if (_query.isNotEmpty)
-                    IconButton(
-                      tooltip: 'Clear',
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _query = '');
-                      },
-                    ),
-                ],
-              ),
-            ),
-          ),
+           // Search bar
+           Card(
+             elevation: 1,
+             color: cs.surfaceContainerHighest,
+             shadowColor: cs.shadow,
+             surfaceTintColor: cs.surfaceTint,
+             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+             child: Padding(
+               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+               child: Row(
+                 children: [
+                   Icon(Icons.search, color: cs.onSurfaceVariant, size: 20),
+                   const SizedBox(width: 12),
+                   Expanded(
+                     child: TextField(
+                       controller: _searchController,
+                       decoration: InputDecoration(
+                         hintText: 'Search modules, topics, or labs',
+                         border: InputBorder.none,
+                         hintStyle: TextStyle(
+                             color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
+                       ),
+                       textInputAction: TextInputAction.search,
+                       onChanged: (v) => setState(() => _query = v),
+                     ),
+                   ),
+                   if (_query.isNotEmpty)
+                     IconButton(
+                       tooltip: 'Clear',
+                       icon: const Icon(Icons.close, size: 20),
+                       onPressed: () {
+                         _searchController.clear();
+                         setState(() => _query = '');
+                       },
+                     )
+                   else
+                     IconButton(
+                       tooltip: 'Filter',
+                       icon: Icon(Icons.filter_list, color: cs.onSurfaceVariant, size: 20),
+                       onPressed: () {
+                         // Could implement filter functionality here
+                       },
+                     ),
+                 ],
+               ),
+             ),
+           ),
           const SizedBox(height: 16),
 
-          // Main heading: Topics (Modules)
-          Text(
-            'Topics',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
+           // Main heading: Topics (Modules)
+           Container(
+             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+             decoration: BoxDecoration(
+               color: cs.primaryContainer,
+               borderRadius: BorderRadius.circular(12),
+             ),
+             child: Row(
+               children: [
+                 Icon(Icons.library_books_outlined, color: cs.onPrimaryContainer, size: 24),
+                 const SizedBox(width: 12),
+                 Text(
+                   'Topics',
+                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                       fontWeight: FontWeight.w600, color: cs.onPrimaryContainer),
+                 ),
+                 const Spacer(),
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                   decoration: BoxDecoration(
+                     color: cs.onPrimaryContainer.withValues(alpha: 0.1),
+                     borderRadius: BorderRadius.circular(8),
+                   ),
+                   child: Text(
+                     '${_filteredModules.length}',
+                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                       color: cs.onPrimaryContainer,
+                       fontWeight: FontWeight.w600,
+                     ),
+                   ),
+                 ),
+               ],
+             ),
+           ),
+           const SizedBox(height: 12),
 
           if (_filteredModules.isEmpty)
             const _EmptyCard(text: 'No modules match your search.')
@@ -486,15 +527,26 @@ class _TheoryPageState extends State<TheoryPage> {
 
           const SizedBox(height: 20),
 
-          // Secondary heading: Additional Resources
-          Text(
-            'Additional Resources',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
-                ),
-          ),
-          const SizedBox(height: 8),
+           // Secondary heading: Additional Resources
+           Container(
+             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+             decoration: BoxDecoration(
+               color: cs.secondaryContainer,
+               borderRadius: BorderRadius.circular(12),
+             ),
+             child: Row(
+               children: [
+                 Icon(Icons.explore_outlined, color: cs.onSecondaryContainer, size: 20),
+                 const SizedBox(width: 12),
+                 Text(
+                   'Additional Resources',
+                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                       fontWeight: FontWeight.w600, color: cs.onSecondaryContainer),
+                 ),
+               ],
+             ),
+           ),
+           const SizedBox(height: 12),
 
           // Coursera (expandable)
           _ExpandableCard(
@@ -677,108 +729,176 @@ class _ModuleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerLowest,
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Module ${module.number} — ${module.title}',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              if (module.lectureHours != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: cs.secondaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${module.lectureHours} hrs',
-                    style: TextStyle(color: cs.onSecondaryContainer, fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ),
-            ],
-          ),
-          children: [
-            // Sub-topics
-            if (module.sections.isNotEmpty) ...[
-              const _Subheading(text: 'Sub-topics'),
-              const SizedBox(height: 8),
-              ...module.sections.map((s) => _BulletBlock(heading: s.heading, bullets: s.bullets)),
-              const SizedBox(height: 12),
-            ],
+     return Card(
+       elevation: 1,
+       color: cs.surfaceContainerLowest,
+       shadowColor: cs.shadow,
+       surfaceTintColor: cs.surfaceTint,
+       margin: const EdgeInsets.only(bottom: 12),
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+       child: Theme(
+         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+         child: ExpansionTile(
+           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+           title: Row(
+             children: [
+               Container(
+                 width: 32,
+                 height: 32,
+                 decoration: BoxDecoration(
+                   color: cs.primaryContainer,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: Center(
+                   child: Text(
+                     '${module.number}',
+                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                       color: cs.onPrimaryContainer,
+                       fontWeight: FontWeight.w600,
+                     ),
+                   ),
+                 ),
+               ),
+               const SizedBox(width: 12),
+               Expanded(
+                 child: Text(
+                   module.title,
+                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                     fontWeight: FontWeight.w600,
+                     color: cs.onSurface,
+                   ),
+                 ),
+               ),
+               if (module.lectureHours != null)
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                   decoration: BoxDecoration(
+                     color: cs.secondaryContainer,
+                     borderRadius: BorderRadius.circular(12),
+                   ),
+                   child: Text(
+                     '${module.lectureHours} hrs',
+                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                       color: cs.onSecondaryContainer,
+                       fontWeight: FontWeight.w600,
+                     ),
+                   ),
+                 ),
+             ],
+           ),
+           children: [
+             // Sub-topics
+             if (module.sections.isNotEmpty) ...[
+               const _Subheading(text: 'Sub-topics'),
+               const SizedBox(height: 8),
+               Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(
+                   color: cs.surfaceContainerHighest,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: Column(
+                   children: module.sections.map((s) => _BulletBlock(heading: s.heading, bullets: s.bullets)).toList(),
+                 ),
+               ),
+               const SizedBox(height: 16),
+             ],
 
-            const _Subheading(text: 'Study Material'),
-            const SizedBox(height: 6),
-            _LinkTile(
-    leadingIcon: Icons.picture_as_pdf_outlined,
-    title: 'Module ${module.number} Study Material (PDF)',
-    url: 'lib/assets/pdfs/Module${module.number}.pdf', 
-    onOpen: () => onOpenModulePdf(module.number),
-    onCopy: () => Clipboard.setData(
-      ClipboardData(text: 'lib/assets/pdfs/Module${module.number}.pdf'),
-  ),
-),
-            const SizedBox(height: 12),
+             const _Subheading(text: 'Study Material'),
+             const SizedBox(height: 8),
+             Container(
+               padding: const EdgeInsets.all(12),
+               decoration: BoxDecoration(
+                 color: cs.surfaceContainerHighest,
+                 borderRadius: BorderRadius.circular(8),
+               ),
+               child: _LinkTile(
+                 leadingIcon: Icons.picture_as_pdf_outlined,
+                 title: 'Module ${module.number} Study Material (PDF)',
+                 url: 'lib/assets/pdfs/Module${module.number}.pdf',
+                 onOpen: () => onOpenModulePdf(module.number),
+                 onCopy: () => Clipboard.setData(
+                   ClipboardData(text: 'lib/assets/pdfs/Module${module.number}.pdf'),
+                 ),
+               ),
+             ),
+             const SizedBox(height: 16),
 
-            // Academia & Industry mapping (links)
-            if (module.academiaLinks.isNotEmpty || module.industryLinks.isNotEmpty) ...[
-              const _Subheading(text: 'Mapping with Industry & International Academia'),
-              const SizedBox(height: 6),
-              ...module.academiaLinks.map(
-                (l) => _LinkTile(
-                  leadingIcon: Icons.public_outlined,
-                  title: l.label,
-                  url: l.url,
-                  onOpen: () => onOpenLink(l.url),
-                  onCopy: () => onCopyLink(l.url),
-                ),
-              ),
-              ...module.industryLinks.map(
-                (l) => _LinkTile(
-                  leadingIcon: Icons.memory_outlined,
-                  title: l.label,
-                  url: l.url,
-                  onOpen: () => onOpenLink(l.url),
-                  onCopy: () => onCopyLink(l.url),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+             // Academia & Industry mapping (links)
+             if (module.academiaLinks.isNotEmpty || module.industryLinks.isNotEmpty) ...[
+               const _Subheading(text: 'Mapping with Industry & International Academia'),
+               const SizedBox(height: 8),
+               Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(
+                   color: cs.surfaceContainerHighest,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: Column(
+                   children: [
+                     ...module.academiaLinks.map(
+                       (l) => _LinkTile(
+                         leadingIcon: Icons.public_outlined,
+                         title: l.label,
+                         url: l.url,
+                         onOpen: () => onOpenLink(l.url),
+                         onCopy: () => onCopyLink(l.url),
+                       ),
+                     ),
+                     ...module.industryLinks.map(
+                       (l) => _LinkTile(
+                         leadingIcon: Icons.memory_outlined,
+                         title: l.label,
+                         url: l.url,
+                         onOpen: () => onOpenLink(l.url),
+                         onCopy: () => onCopyLink(l.url),
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+               const SizedBox(height: 16),
+             ],
 
-            // Textbook mapping
-            if (module.textbooks.isNotEmpty) ...[
-              const _Subheading(text: 'Text Book Mapping'),
-              const SizedBox(height: 6),
-              ...module.textbooks.map(
-                (b) => _LinkTile(
-                  leadingIcon: Icons.menu_book_outlined,
-                  title: b.title,
-                  url: b.storeUrl,
-                  onOpen: () => onOpenLink(b.storeUrl),
-                  onCopy: () => onCopyLink(b.storeUrl),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+             // Textbook mapping
+             if (module.textbooks.isNotEmpty) ...[
+               const _Subheading(text: 'Text Book Mapping'),
+               const SizedBox(height: 8),
+               Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(
+                   color: cs.surfaceContainerHighest,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: Column(
+                   children: module.textbooks.map(
+                     (b) => _LinkTile(
+                       leadingIcon: Icons.menu_book_outlined,
+                       title: b.title,
+                       url: b.storeUrl,
+                       onOpen: () => onOpenLink(b.storeUrl),
+                       onCopy: () => onCopyLink(b.storeUrl),
+                     ),
+                   ).toList(),
+                 ),
+               ),
+               const SizedBox(height: 16),
+             ],
 
-            // Lab assignments
-            if (module.labAssignments.isNotEmpty) ...[
-              const _Subheading(text: 'Corresponding Lab Assignment'),
-              const SizedBox(height: 6),
-              _BulletedList(items: module.labAssignments),
-              const SizedBox(height: 6),
-            ],
+             // Lab assignments
+             if (module.labAssignments.isNotEmpty) ...[
+               const _Subheading(text: 'Corresponding Lab Assignment'),
+               const SizedBox(height: 8),
+               Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(
+                   color: cs.surfaceContainerHighest,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: _BulletedList(items: module.labAssignments),
+               ),
+             ],
           ],
         ),
       ),
@@ -801,34 +921,74 @@ class _LinkTile extends StatelessWidget {
     required this.onCopy,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+   @override
+   Widget build(BuildContext context) {
+     final cs = Theme.of(context).colorScheme;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      leading: Icon(leadingIcon, color: cs.primary),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(url, style: TextStyle(color: cs.onSurfaceVariant), overflow: TextOverflow.ellipsis),
-      trailing: Wrap(
-        spacing: 6,
-        children: [
-          IconButton(
-            tooltip: 'Open',
-            icon: const Icon(Icons.open_in_new),
-            onPressed: onOpen,
-          ),
-          IconButton(
-            tooltip: 'Copy',
-            icon: const Icon(Icons.copy),
-            onPressed: onCopy,
-          ),
-        ],
-      ),
-      onTap: onOpen,
-      onLongPress: onCopy,
-    );
-  }
+     return Container(
+       margin: const EdgeInsets.only(bottom: 8),
+       decoration: BoxDecoration(
+         color: cs.surfaceContainerHighest,
+         borderRadius: BorderRadius.circular(12),
+       ),
+       child: ListTile(
+         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+         leading: Container(
+           width: 40,
+           height: 40,
+           decoration: BoxDecoration(
+             color: cs.primaryContainer,
+             borderRadius: BorderRadius.circular(8),
+           ),
+           child: Icon(leadingIcon, color: cs.onPrimaryContainer),
+         ),
+         title: Text(
+           title,
+           style: Theme.of(context).textTheme.titleSmall?.copyWith(
+             fontWeight: FontWeight.w600,
+             color: cs.onSurface,
+           ),
+         ),
+         subtitle: Text(
+           url,
+           style: Theme.of(context).textTheme.bodySmall?.copyWith(
+             color: cs.onSurfaceVariant,
+           ),
+           overflow: TextOverflow.ellipsis,
+           maxLines: 1,
+         ),
+         trailing: Row(
+           mainAxisSize: MainAxisSize.min,
+           children: [
+             OutlinedButton.icon(
+               onPressed: onOpen,
+               icon: const Icon(Icons.open_in_new, size: 16),
+               label: const Text('Open'),
+               style: OutlinedButton.styleFrom(
+                 side: BorderSide(color: cs.outline),
+                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                 textStyle: Theme.of(context).textTheme.labelSmall,
+               ),
+             ),
+             const SizedBox(width: 8),
+             IconButton(
+               tooltip: 'Copy',
+               icon: const Icon(Icons.copy, size: 18),
+               onPressed: onCopy,
+               style: IconButton.styleFrom(
+                 backgroundColor: cs.surfaceContainerHighest,
+               ),
+             ),
+           ],
+         ),
+         onTap: onOpen,
+         onLongPress: onCopy,
+         shape: RoundedRectangleBorder(
+           borderRadius: BorderRadius.circular(12),
+         ),
+       ),
+     );
+   }
 }
 
 class _ExpandableCard extends StatelessWidget {
@@ -844,44 +1004,75 @@ class _ExpandableCard extends StatelessWidget {
     required this.child,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+   @override
+   Widget build(BuildContext context) {
+     final cs = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: expanded,
-          onExpansionChanged: onChanged,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          children: [child],
-        ),
-      ),
-    );
-  }
+     return Card(
+       elevation: 1,
+       color: cs.surfaceContainerLowest,
+       shadowColor: cs.shadow,
+       surfaceTintColor: cs.surfaceTint,
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+       child: Theme(
+         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+         child: ExpansionTile(
+           initiallyExpanded: expanded,
+           onExpansionChanged: onChanged,
+           tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+           childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+           title: Row(
+             children: [
+               Icon(
+                 Icons.expand_more,
+                 color: cs.onSurfaceVariant,
+                 size: 20,
+               ),
+               const SizedBox(width: 8),
+               Text(
+                 title,
+                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                   fontWeight: FontWeight.w600,
+                   color: cs.onSurface,
+                 ),
+               ),
+             ],
+           ),
+           children: [child],
+         ),
+       ),
+     );
+   }
 }
 
 class _Subheading extends StatelessWidget {
   final String text;
   const _Subheading({required this.text});
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: cs.onSurfaceVariant,
-          ),
-    );
-  }
+   @override
+   Widget build(BuildContext context) {
+     final cs = Theme.of(context).colorScheme;
+     return Row(
+       children: [
+         Container(
+           width: 4,
+           height: 16,
+           decoration: BoxDecoration(
+             color: cs.primary,
+             borderRadius: BorderRadius.circular(2),
+           ),
+         ),
+         const SizedBox(width: 8),
+         Text(
+           text,
+           style: Theme.of(context).textTheme.titleMedium?.copyWith(
+             fontWeight: FontWeight.w700,
+             color: cs.onSurface,
+           ),
+         ),
+       ],
+     );
+   }
 }
 
 class _BulletBlock extends StatelessWidget {
@@ -889,64 +1080,111 @@ class _BulletBlock extends StatelessWidget {
   final List<String> bullets;
   const _BulletBlock({this.heading, required this.bullets});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (heading != null) ...[
-            Text(heading!, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-          ],
-          _BulletedList(items: bullets),
-        ],
-      ),
-    );
-  }
+   @override
+   Widget build(BuildContext context) {
+     final cs = Theme.of(context).colorScheme;
+     return Padding(
+       padding: const EdgeInsets.only(bottom: 8),
+       child: Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           if (heading != null) ...[
+             Container(
+               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+               decoration: BoxDecoration(
+                 color: cs.tertiaryContainer,
+                 borderRadius: BorderRadius.circular(8),
+               ),
+               child: Text(
+                 heading!,
+                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                   fontWeight: FontWeight.w600,
+                   color: cs.onTertiaryContainer,
+                 ),
+               ),
+             ),
+             const SizedBox(height: 8),
+           ],
+           _BulletedList(items: bullets),
+         ],
+       ),
+     );
+   }
 }
 
 class _BulletedList extends StatelessWidget {
   final List<String> items;
   const _BulletedList({required this.items});
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: items
-          .map(
-            (t) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('•  '),
-                  Expanded(child: Text(t)),
-                ],
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
+   @override
+   Widget build(BuildContext context) {
+     final cs = Theme.of(context).colorScheme;
+     return Column(
+       children: items.map(
+         (text) => Padding(
+           padding: const EdgeInsets.symmetric(vertical: 4),
+           child: Row(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Container(
+                 width: 6,
+                 height: 6,
+                 margin: const EdgeInsets.only(top: 6),
+                 decoration: BoxDecoration(
+                   color: cs.primary,
+                   borderRadius: BorderRadius.circular(3),
+                 ),
+               ),
+               const SizedBox(width: 12),
+               Expanded(
+                 child: Text(
+                   text,
+                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                     color: cs.onSurface,
+                   ),
+                 ),
+               ),
+             ],
+           ),
+         ),
+       ).toList(),
+     );
+   }
 }
 
 class _EmptyCard extends StatelessWidget {
   final String text;
   const _EmptyCard({required this.text});
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      elevation: 0,
-      color: cs.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('No modules match your search.'),
-      ),
-    );
-  }
+   @override
+   Widget build(BuildContext context) {
+     final cs = Theme.of(context).colorScheme;
+     return Card(
+       elevation: 0,
+       color: cs.surfaceContainerLowest,
+       shadowColor: cs.shadow,
+       surfaceTintColor: cs.surfaceTint,
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+       child: Padding(
+         padding: const EdgeInsets.all(24),
+         child: Column(
+           children: [
+             Icon(
+               Icons.library_books_outlined,
+               size: 48,
+               color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+             ),
+             const SizedBox(height: 16),
+             Text(
+               text,
+               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                 color: cs.onSurfaceVariant,
+               ),
+               textAlign: TextAlign.center,
+             ),
+           ],
+         ),
+       ),
+     );
+   }
 }
