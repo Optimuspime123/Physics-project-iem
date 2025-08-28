@@ -10,6 +10,32 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 
+@visibleForTesting
+List<LabExperiment> filterLabExperiments(
+    List<LabExperiment> experiments, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return experiments;
+  return experiments
+      .where((exp) =>
+          exp.title.toLowerCase().contains(q) ||
+          exp.objective.toLowerCase().contains(q))
+      .toList();
+}
+
+@visibleForTesting
+List<VirtualExperiment> filterVirtualExperiments(
+    List<VirtualExperiment> experiments, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return experiments;
+  return experiments
+      .where((exp) =>
+          exp.title.toLowerCase().contains(q) ||
+          exp.module.toLowerCase().contains(q) ||
+          exp.description.toLowerCase().contains(q) ||
+          exp.features.any((f) => f.toLowerCase().contains(q)))
+      .toList();
+}
+
 class LabPage extends StatefulWidget {
   const LabPage({super.key});
   @override
@@ -297,27 +323,11 @@ Power transfer is maximized near load matching; efficiency depends on material f
   }
 
   // ----------------------- SEARCH -----------------------
-  List<LabExperiment> get _filteredLabExperiments {
-    final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return _labExperiments;
-    return _labExperiments
-        .where((exp) =>
-            exp.title.toLowerCase().contains(q) ||
-            exp.objective.toLowerCase().contains(q))
-        .toList();
-  }
+  List<LabExperiment> get _filteredLabExperiments =>
+      filterLabExperiments(_labExperiments, _query);
 
-  List<VirtualExperiment> get _filteredVirtualExperiments {
-    final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return _virtualExperiments;
-    return _virtualExperiments
-        .where((exp) =>
-            exp.title.toLowerCase().contains(q) ||
-            exp.module.toLowerCase().contains(q) ||
-            exp.description.toLowerCase().contains(q) ||
-            exp.features.any((f) => f.toLowerCase().contains(q)))
-        .toList();
-  }
+  List<VirtualExperiment> get _filteredVirtualExperiments =>
+      filterVirtualExperiments(_virtualExperiments, _query);
 
   // ----------------------- PDF OPEN HELPERS -----------------------
   static const String _assetPdfPath = 'lib/assets/pdfs/LabManual.pdf';

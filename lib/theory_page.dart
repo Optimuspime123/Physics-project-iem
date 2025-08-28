@@ -1,10 +1,28 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+@visibleForTesting
+List<ModuleItem> filterModules(List<ModuleItem> modules, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return modules;
+  bool matches(ModuleItem m) {
+    if (m.title.toLowerCase().contains(q)) return true;
+    for (final s in m.sections) {
+      if ((s.heading ?? '').toLowerCase().contains(q)) return true;
+      if (s.bullets.any((b) => b.toLowerCase().contains(q))) return true;
+    }
+    if (m.labAssignments.any((b) => b.toLowerCase().contains(q))) return true;
+    if (m.textbooks.any((b) => b.title.toLowerCase().contains(q))) return true;
+    return false;
+  }
+
+  return modules.where(matches).toList();
+}
 
 class TheoryPage extends StatefulWidget {
   const TheoryPage({super.key});
@@ -400,22 +418,7 @@ class _TheoryPageState extends State<TheoryPage> {
   }
 
   // ----------------------- SEARCH -----------------------
-  List<ModuleItem> get _filteredModules {
-    final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return _modules;
-    bool matches(ModuleItem m) {
-      if (m.title.toLowerCase().contains(q)) return true;
-      for (final s in m.sections) {
-        if ((s.heading ?? '').toLowerCase().contains(q)) return true;
-        if (s.bullets.any((b) => b.toLowerCase().contains(q))) return true;
-      }
-      if (m.labAssignments.any((b) => b.toLowerCase().contains(q))) return true;
-      if (m.textbooks.any((b) => b.title.toLowerCase().contains(q))) return true;
-      return false;
-    }
-
-    return _modules.where(matches).toList();
-  }
+  List<ModuleItem> get _filteredModules => filterModules(_modules, _query);
 
   // ----------------------- UI -----------------------
   @override
